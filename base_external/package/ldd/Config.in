@@ -1,0 +1,6 @@
+
+config BR2_PACKAGE_LDD
+	bool "LDD Assignments"
+	help
+	  Includes the misc_modules and scull modules from the Linux assignment 7 to buildrootfs.
+	  Device Drivers book.

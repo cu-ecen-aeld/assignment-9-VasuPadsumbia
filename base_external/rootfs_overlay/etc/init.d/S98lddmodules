@@ -1,0 +1,94 @@
+#!/bin/sh
+# This script is run at boot time to load the kernel modules for the ldd assignment.
+# It is expected to be placed in /etc/init.d/S98lddmodules
+# It should be executable and will be run by the init system.
+# Load the misc-modules and scull kernel modules
+
+# Ensure the modules are loaded at boot
+SCULL_PATH="/etc/modules/scull"
+MISC_PATH="/etc/modules/misc-modules"
+CMD="$1"
+[ -z "$CMD" ] && CMD="start"
+
+if [ "$CMD" = "start" ]; then
+    echo "Starting ldd modules..."
+    if ! lsmod | grep -q "misc_modules"; then
+        ${MISC_PATH}/module_load faulty ${MISC_PATH}
+        echo "faulty driver loaded successfully."
+    else
+        echo "misc_modules is already loaded."
+    fi
+    if ! lsmod | grep -q "scull"; then
+        ${SCULL_PATH}/scull_load /etc/modules/scull
+        echo "scull driver loaded successfully."
+    else
+        echo "scull is already loaded."
+    fi
+    if ! lsmod | grep -q "hello"; then
+        modprobe hello.ko
+        echo "hello module loaded successfully."
+    else
+        echo "hello is already loaded."
+    fi
+    echo "ldd modules started successfully."
+    echo "You can check the status of the modules using 'lsmod | grep <module_name>'"
+    echo "To unload the modules, use 'rmmod <module_name>'"
+    echo "To stop the modules, run '$0 stop'"
+elif [ "$CMD" = "stop" ]; then
+    echo "Stopping ldd modules..."
+    if lsmod | grep -q "misc_modules"; then
+        ${MISC_PATH}/module_unload faulty 
+        echo "faulty unloaded."
+    else
+        echo "misc_modules is not loaded."
+    fi
+    if lsmod | grep -q "scull"; then
+        ${SCULL_PATH}/scull_unload
+        echo "scull unloaded."
+    else
+        echo "scull is not loaded."
+    fi
+    if lsmod | grep -q "hello"; then
+        rmmod hello.ko
+        echo "hello unloaded."
+    else
+        echo "hello is not loaded."
+    fi
+    echo "ldd modules stopped successfully."
+else
+    echo "Usage: $0 {start|stop}"
+fi
+# End of S98lddmodules script
+# This script should be placed in the appropriate directory for your init system to execute it at boot
+# For example, in a typical Linux system, it would be placed in /etc/init.d
+# Make sure to give it execute permissions:
+# chmod +x /etc/init.d/S98lddmodules    
+# This script assumes that the kernel modules are located in /lib/modules/$(uname -r)/
+# If your modules are located elsewhere, you will need to adjust the paths accordingly. 
+# Note: This script does not handle errors in loading modules, you may want to add error handling as needed.
+# This script is intended to be used in conjunction with the ldd assignment, where the misc
+# modules and scull kernel modules are required for the assignment to function correctly.
+# Ensure that the script is run with root privileges, as loading kernel modules requires root access.
+# This script is a part of the ldd assignment and should be used in conjunction with the ldd.mk file
+# to ensure that the kernel modules are built and installed correctly.
+# Make sure to test the script after placing it in the init.d directory to ensure that it works as expected.
+# You can test it by running the script manually:
+# /etc/init.d/S98lddmodules
+# If there are any issues, check the system logs for errors related to module loading.
+# You can view the logs using:
+# dmesg | grep misc_modules
+# dmesg | grep scull
+# This will help you diagnose any issues with loading the kernel modules.
+# If you encounter any issues, ensure that the kernel headers are installed and that the modules are built correctly.
+# You can also check the status of the modules using:
+# lsmod | grep misc_modules
+# lsmod | grep scull
+# This will show you if the modules are currently loaded in the kernel.     
+# If the modules are not loaded, you may need to check the build process and ensure that the modules are compiled correctly.
+# If you need to unload the modules, you can use:
+# rmmod misc_modules
+# rmmod scull
+# This will remove the modules from the kernel. Make sure to do this only if you are
+# sure that the modules are not in use, as unloading them while they are in use can cause system instability.
+# If you need to reload the modules, you can simply run the script again:
+# /etc/init.d/S98lddmodules
