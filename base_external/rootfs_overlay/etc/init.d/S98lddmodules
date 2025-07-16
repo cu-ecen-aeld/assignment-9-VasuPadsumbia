@@ -7,10 +7,28 @@
 # Ensure the modules are loaded at boot
 SCULL_PATH="/etc/modules/scull"
 MISC_PATH="/etc/modules/misc-modules"
+AESDCHAR_PATH="/etc/modules/aesdchar"
+
 CMD="$1"
 [ -z "$CMD" ] && CMD="start"
 
 if [ "$CMD" = "start" ]; then
+    echo "Starting aesdchar drivers..."
+    if [ ! -d "${AESDCHAR_PATH}" ]; then
+        echo "Error: aesdchar modules path ${AESDCHAR_PATH} does not exist."
+        exit 1
+    fi
+    if ! lsmod | grep -q "aesdchar"; then
+        ${AESDCHAR_PATH}/aesdchar_load ${AESDCHAR_PATH} 
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to load aesdchar module."
+            exit 1
+        fi
+        echo "aesdchar module loaded successfully."
+    else
+        echo "aesdchar modules are already loaded."
+    fi
+
     echo "Starting ldd modules..."
     if ! lsmod | grep -q "misc_modules"; then
         ${MISC_PATH}/module_load faulty ${MISC_PATH}
@@ -35,6 +53,18 @@ if [ "$CMD" = "start" ]; then
     echo "To unload the modules, use 'rmmod <module_name>'"
     echo "To stop the modules, run '$0 stop'"
 elif [ "$CMD" = "stop" ]; then
+    echo "Stopping aesdchar drivers..."
+    if lsmod | grep -q "aesdchar"; then
+        rmmod aesdchar.ko
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to unload aesdchar module."
+            exit 1
+        fi
+        echo "aesdchar module unloaded successfully."
+    else
+        echo "aesdchar modules are not loaded."
+    fi
+    
     echo "Stopping ldd modules..."
     if lsmod | grep -q "misc_modules"; then
         ${MISC_PATH}/module_unload faulty 

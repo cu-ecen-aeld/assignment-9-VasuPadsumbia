@@ -6,7 +6,7 @@
 ##############################################################
 
 #TODO: Fill up the contents below in order to reference your assignment 3 git contents
-AESD_ASSIGNMENTS_VERSION = d203d48b913307a51e8805779312b9713a713029
+AESD_ASSIGNMENTS_VERSION = 54b917fee2ba9590562d59f0db6faaf081d7580a
 # Note: Be sure to reference the *ssh* repository URL here (not https) to work properly
 # with ssh keys and the automated build/test system.
 # Your site should start with git@github.com:
@@ -16,6 +16,9 @@ AESD_ASSIGNMENTS_GIT_SUBMODULES = YES
 
 define AESD_ASSIGNMENTS_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/finder-app all
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/aesd-char-driver KERNELDIR=$(LINUX_DIR) ARCH=arm64 CROSS_COMPILE=$(TARGET_CROSS) modules
+	
+
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/server all
 endef
 
@@ -29,6 +32,14 @@ define AESD_ASSIGNMENTS_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 $(@D)/finder-app/writer.elf $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(@D)/server/aesdsocket $(TARGET_DIR)/usr/bin/
 	$(INSTALL) -m 0755 $(@D)/assignment-autotest/test/assignment4/* $(TARGET_DIR)/bin
+	mkdir -p $(TARGET_DIR)/etc/modules/aesdchar
+	$(INSTALL) -d 0755 $(@D)/aesdchar
+	for f in $(@D)/aesd-char-driver/*; do \
+	    $(INSTALL) -m 0755 $$f $(TARGET_DIR)/etc/modules/aesdchar/; \
+	done
+	$(INSTALL) -m 0644 $(@D)/aesd-char-driver/aesdchar.ko \
+        $(TARGET_DIR)/lib/modules/$(LINUX_VERSION_PROBED)/extra/
+    $(HOST_DIR)/sbin/depmod -b $(TARGET_DIR) $(LINUX_VERSION_PROBED)
 endef
 
 $(eval $(generic-package))
